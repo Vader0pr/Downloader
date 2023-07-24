@@ -16,9 +16,12 @@ class Program
     {
         await Task.Run(() => Install(false, "yt-dlp", "yt-dlp", FileType.Exe, new string[] { "yt-dlp.exe" }, new string[] { }));
         await Task.Run(() => Install(false, "BtbN", "FFmpeg-Builds", FileType.Zip, new string[] { "win64", "gpl", "zip" }, new string[] { "shared", "linux" }, true));
-        await Task.Run(() => Install(true, "Vader0pr", "Downloader", FileType.Zip, new string[] { "Downloader.zip" }, new string[] { }));
+        await Task.Run(() => Install(true, "Vader0pr", "Downloader", FileType.Zip, new string[] { "Downloader.zip" }, new string[] { }, false, true));
+        Console.Clear();
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("Installer finished working");
     }
-    static async Task Install(bool run, string owner, string repo, FileType fileType, string[] filter, string[] negativeFilter, bool ffmpeg = false, string executableName = "Downloader.exe")
+    static async Task Install(bool run, string owner, string repo, FileType fileType, string[] filter, string[] negativeFilter, bool ffmpeg = false, bool mainFile = false, string executableName = "Downloader.exe")
     {
         ReleasesApiClient apiClient = new();
         
@@ -107,10 +110,16 @@ class Program
             Directory.Delete(asset.Name.Replace(new FileInfo(asset.Name).Extension, ""), true);
         }
 
+        if (mainFile)
+        {
+            File.Move(Directory.GetFiles(Environment.CurrentDirectory + "\\Downloader")[0], Environment.CurrentDirectory + "\\" + "Downloader.exe", true);
+            Directory.Delete(asset.Name.Replace(new FileInfo(asset.Name).Extension, ""), true);
+        }
+
         if (run)
         {
             Console.WriteLine("Executing program...");
-            Process.Start(Path.Combine(folderName, executableName));
+            Process.Start(executableName);
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Program executed");
             Console.ForegroundColor = ConsoleColor.White;
