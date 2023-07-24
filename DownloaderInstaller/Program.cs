@@ -93,15 +93,18 @@ class Program
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Data extracted");
             Console.ForegroundColor = ConsoleColor.White;
+            File.Delete(asset.Name);
         }
 
         if (ffmpeg)
         {
-            foreach (string file in Directory.GetFiles(Path.Combine(asset.Name.Replace(new FileInfo(asset.Name).Extension, ""), asset.Name.Replace(new FileInfo(asset.Name).Extension, ""), "bin")))
+            string path = Path.Combine(asset.Name.Replace(new FileInfo(asset.Name).Extension, ""), asset.Name.Replace(new FileInfo(asset.Name).Extension, ""), "bin");
+            foreach (string file in Directory.GetFiles(path))
             {
-                File.Move(file, Environment.CurrentDirectory);
-                Directory.Delete(Path.Combine(asset.Name.Replace(new FileInfo(asset.Name).Extension, ""), asset.Name.Replace(new FileInfo(asset.Name).Extension, ""), "bin"), true);
+                string destination = Path.Combine(Environment.CurrentDirectory + "\\" + new FileInfo(file).Name);
+                File.Move(file, destination, true);
             }
+            Directory.Delete(asset.Name.Replace(new FileInfo(asset.Name).Extension, ""), true);
         }
 
         if (run)
