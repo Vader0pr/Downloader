@@ -29,99 +29,100 @@ namespace Downloader
         /// </summary>
         private void InitializeComponent()
         {
-            textBox1 = new TextBox();
-            button1 = new Button();
-            button2 = new Button();
-            listBox1 = new ListBox();
-            button3 = new Button();
-            textBox2 = new TextBox();
-            label1 = new Label();
+            AddItemTextbox = new TextBox();
+            AddToQueueButton = new Button();
+            StartDownloadButton = new Button();
+            DownloadQueueListbox = new ListBox();
+            DeleteSelectedButton = new Button();
+            CurrentDownloadInfoTextbox = new TextBox();
+            CurrentDownloadLabel = new Label();
             SuspendLayout();
             // 
-            // textBox1
+            // AddItemTextbox
             // 
-            textBox1.BackColor = Color.FromArgb(25, 25, 25);
-            textBox1.BorderStyle = BorderStyle.FixedSingle;
-            textBox1.ForeColor = SystemColors.Window;
-            textBox1.Location = new Point(12, 12);
-            textBox1.Name = "textBox1";
-            textBox1.Size = new Size(574, 23);
-            textBox1.TabIndex = 0;
+            AddItemTextbox.BackColor = Color.FromArgb(25, 25, 25);
+            AddItemTextbox.BorderStyle = BorderStyle.FixedSingle;
+            AddItemTextbox.ForeColor = SystemColors.Window;
+            AddItemTextbox.Location = new Point(12, 12);
+            AddItemTextbox.Name = "AddItemTextbox";
+            AddItemTextbox.Size = new Size(574, 23);
+            AddItemTextbox.TabIndex = 0;
+            AddItemTextbox.KeyPress += AddItemTextbox_KeyPress;
             // 
-            // button1
+            // AddToQueueButton
             // 
-            button1.BackColor = Color.FromArgb(0, 192, 0);
-            button1.Cursor = Cursors.Hand;
-            button1.FlatAppearance.BorderSize = 0;
-            button1.FlatStyle = FlatStyle.Flat;
-            button1.Location = new Point(592, 12);
-            button1.Name = "button1";
-            button1.Size = new Size(95, 23);
-            button1.TabIndex = 1;
-            button1.Text = "Add to queue";
-            button1.UseVisualStyleBackColor = false;
-            button1.Click += button1_Click;
+            AddToQueueButton.BackColor = Color.FromArgb(0, 192, 0);
+            AddToQueueButton.Cursor = Cursors.Hand;
+            AddToQueueButton.FlatAppearance.BorderSize = 0;
+            AddToQueueButton.FlatStyle = FlatStyle.Flat;
+            AddToQueueButton.Location = new Point(592, 12);
+            AddToQueueButton.Name = "AddToQueueButton";
+            AddToQueueButton.Size = new Size(95, 23);
+            AddToQueueButton.TabIndex = 1;
+            AddToQueueButton.Text = "Add to queue";
+            AddToQueueButton.UseVisualStyleBackColor = false;
+            AddToQueueButton.Click += AddToQueueButton_Click;
             // 
-            // button2
+            // StartDownloadButton
             // 
-            button2.BackColor = Color.FromArgb(0, 192, 0);
-            button2.Cursor = Cursors.Hand;
-            button2.FlatAppearance.BorderSize = 0;
-            button2.FlatStyle = FlatStyle.Flat;
-            button2.Location = new Point(693, 12);
-            button2.Name = "button2";
-            button2.Size = new Size(95, 23);
-            button2.TabIndex = 2;
-            button2.Text = "Start download";
-            button2.UseVisualStyleBackColor = false;
-            button2.Click += button2_Click;
+            StartDownloadButton.BackColor = Color.FromArgb(0, 192, 0);
+            StartDownloadButton.Cursor = Cursors.Hand;
+            StartDownloadButton.FlatAppearance.BorderSize = 0;
+            StartDownloadButton.FlatStyle = FlatStyle.Flat;
+            StartDownloadButton.Location = new Point(693, 12);
+            StartDownloadButton.Name = "StartDownloadButton";
+            StartDownloadButton.Size = new Size(95, 23);
+            StartDownloadButton.TabIndex = 2;
+            StartDownloadButton.Text = "Start download";
+            StartDownloadButton.UseVisualStyleBackColor = false;
+            StartDownloadButton.Click += StartDownloadButton_Click;
             // 
-            // listBox1
+            // DownloadQueueListbox
             // 
-            listBox1.BackColor = Color.FromArgb(25, 25, 25);
-            listBox1.BorderStyle = BorderStyle.FixedSingle;
-            listBox1.ForeColor = SystemColors.Window;
-            listBox1.FormattingEnabled = true;
-            listBox1.ItemHeight = 15;
-            listBox1.Location = new Point(12, 41);
-            listBox1.Name = "listBox1";
-            listBox1.SelectionMode = SelectionMode.MultiExtended;
-            listBox1.Size = new Size(574, 362);
-            listBox1.TabIndex = 3;
+            DownloadQueueListbox.BackColor = Color.FromArgb(25, 25, 25);
+            DownloadQueueListbox.BorderStyle = BorderStyle.FixedSingle;
+            DownloadQueueListbox.ForeColor = SystemColors.Window;
+            DownloadQueueListbox.FormattingEnabled = true;
+            DownloadQueueListbox.ItemHeight = 15;
+            DownloadQueueListbox.Location = new Point(12, 41);
+            DownloadQueueListbox.Name = "DownloadQueueListbox";
+            DownloadQueueListbox.SelectionMode = SelectionMode.MultiExtended;
+            DownloadQueueListbox.Size = new Size(574, 362);
+            DownloadQueueListbox.TabIndex = 3;
             // 
-            // button3
+            // DeleteSelectedButton
             // 
-            button3.BackColor = Color.Red;
-            button3.Cursor = Cursors.Hand;
-            button3.FlatAppearance.BorderSize = 0;
-            button3.FlatStyle = FlatStyle.Flat;
-            button3.Location = new Point(592, 41);
-            button3.Name = "button3";
-            button3.Size = new Size(95, 23);
-            button3.TabIndex = 4;
-            button3.Text = "Delete selected";
-            button3.UseVisualStyleBackColor = false;
-            button3.Click += button3_Click;
+            DeleteSelectedButton.BackColor = Color.Red;
+            DeleteSelectedButton.Cursor = Cursors.Hand;
+            DeleteSelectedButton.FlatAppearance.BorderSize = 0;
+            DeleteSelectedButton.FlatStyle = FlatStyle.Flat;
+            DeleteSelectedButton.Location = new Point(592, 41);
+            DeleteSelectedButton.Name = "DeleteSelectedButton";
+            DeleteSelectedButton.Size = new Size(95, 23);
+            DeleteSelectedButton.TabIndex = 4;
+            DeleteSelectedButton.Text = "Delete selected";
+            DeleteSelectedButton.UseVisualStyleBackColor = false;
+            DeleteSelectedButton.Click += DeleteSelectedButton_Click;
             // 
-            // textBox2
+            // CurrentDownloadInfoTextbox
             // 
-            textBox2.BackColor = Color.FromArgb(25, 25, 25);
-            textBox2.BorderStyle = BorderStyle.FixedSingle;
-            textBox2.ForeColor = SystemColors.Window;
-            textBox2.Location = new Point(12, 415);
-            textBox2.Name = "textBox2";
-            textBox2.ReadOnly = true;
-            textBox2.Size = new Size(574, 23);
-            textBox2.TabIndex = 5;
+            CurrentDownloadInfoTextbox.BackColor = Color.FromArgb(25, 25, 25);
+            CurrentDownloadInfoTextbox.BorderStyle = BorderStyle.FixedSingle;
+            CurrentDownloadInfoTextbox.ForeColor = SystemColors.Window;
+            CurrentDownloadInfoTextbox.Location = new Point(12, 415);
+            CurrentDownloadInfoTextbox.Name = "CurrentDownloadInfoTextbox";
+            CurrentDownloadInfoTextbox.ReadOnly = true;
+            CurrentDownloadInfoTextbox.Size = new Size(574, 23);
+            CurrentDownloadInfoTextbox.TabIndex = 5;
             // 
-            // label1
+            // CurrentDownloadLabel
             // 
-            label1.ForeColor = SystemColors.Control;
-            label1.Location = new Point(592, 407);
-            label1.Name = "label1";
-            label1.Size = new Size(196, 34);
-            label1.TabIndex = 6;
-            label1.TextAlign = ContentAlignment.MiddleLeft;
+            CurrentDownloadLabel.ForeColor = SystemColors.Control;
+            CurrentDownloadLabel.Location = new Point(592, 407);
+            CurrentDownloadLabel.Name = "CurrentDownloadLabel";
+            CurrentDownloadLabel.Size = new Size(196, 34);
+            CurrentDownloadLabel.TabIndex = 6;
+            CurrentDownloadLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // MainForm
             // 
@@ -129,13 +130,13 @@ namespace Downloader
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(15, 15, 15);
             ClientSize = new Size(800, 450);
-            Controls.Add(label1);
-            Controls.Add(textBox2);
-            Controls.Add(button3);
-            Controls.Add(listBox1);
-            Controls.Add(button2);
-            Controls.Add(button1);
-            Controls.Add(textBox1);
+            Controls.Add(CurrentDownloadLabel);
+            Controls.Add(CurrentDownloadInfoTextbox);
+            Controls.Add(DeleteSelectedButton);
+            Controls.Add(DownloadQueueListbox);
+            Controls.Add(StartDownloadButton);
+            Controls.Add(AddToQueueButton);
+            Controls.Add(AddItemTextbox);
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
             Name = "MainForm";
@@ -148,12 +149,12 @@ namespace Downloader
 
         #endregion
 
-        private TextBox textBox1;
-        private Button button1;
-        private Button button2;
-        private ListBox listBox1;
-        private Button button3;
-        private TextBox textBox2;
-        private Label label1;
+        private TextBox AddItemTextbox;
+        private Button AddToQueueButton;
+        private Button StartDownloadButton;
+        private ListBox DownloadQueueListbox;
+        private Button DeleteSelectedButton;
+        private TextBox CurrentDownloadInfoTextbox;
+        private Label CurrentDownloadLabel;
     }
 }

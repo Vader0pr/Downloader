@@ -14,9 +14,9 @@ class Program
     }
     static async void StartInstaller()
     {
-        await Task.Run(() => Install(false, "yt-dlp", "yt-dlp", FileType.Exe, new string[] { "yt-dlp.exe" }, new string[] { }));
+        await Task.Run(() => Install(false, "yt-dlp", "yt-dlp", FileType.Exe, new string[] { "yt-dlp.exe" }, Array.Empty<string>()));
         await Task.Run(() => Install(false, "BtbN", "FFmpeg-Builds", FileType.Zip, new string[] { "win64", "gpl", "zip" }, new string[] { "shared", "linux" }, true));
-        await Task.Run(() => Install(true, "Vader0pr", "Downloader", FileType.Zip, new string[] { "Downloader.zip" }, new string[] { }, false, true));
+        await Task.Run(() => Install(true, "Vader0pr", "Downloader", FileType.Zip, new string[] { "Downloader.zip" }, Array.Empty<string>(), false, true));
         Console.Clear();
         Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine("Installer finished working");
@@ -25,22 +25,23 @@ class Program
     {
         ReleasesApiClient apiClient = new();
         
-        Release? release = await apiClient.GetLatestReleaseAsync(owner, repo);
+        Release release = await apiClient.GetLatestReleaseAsync(owner, repo) ?? throw new Exception("No release error");
 
-        List<ReleaseAsset> assets = release.Assets.ToList();
+        List<ReleaseAsset> assets = (release.Assets ?? throw new Exception("No release asset error")).ToList();
         foreach (string item in filter)
         {
-            assets = assets.Where(x => x.Name.Contains(item)).ToList();
+            assets = assets.Where(x => (x.Name ?? "").Contains(item)).ToList();
         }
         foreach (string item in negativeFilter)
         {
-            assets = assets.Where(x => x.Name.Contains(item) == false).ToList();
+            assets = assets.Where(x => (x.Name ?? "").Contains(item) == false).ToList();
         }
         ReleaseAsset asset = assets.First();
 
         Console.WriteLine("Latest release: " + release.Name);
 
-        string folderName = asset.Name.Replace(new FileInfo(asset.Name).Extension, "");
+        string assetName = asset.Name ?? repo + "zip";
+        string folderName = assetName.Replace(new FileInfo(assetName).Extension, "");
 
         if (File.Exists(asset.Name)) File.Delete(asset.Name);
         if (Directory.Exists(folderName)) Directory.Delete(folderName, true);
@@ -49,7 +50,7 @@ class Program
 
         using (HttpClient client = new())
         {
-            using (FileStream fs = new(asset.Name, FileMode.Create, FileAccess.Write))
+            using (FileStream fs = new(assetName, FileMode.Create, FileAccess.Write))
             {
                 Stream stream = await client.GetStreamAsync(asset.DownloadUrl);
 
@@ -64,8 +65,8 @@ class Program
                 while (fs.Length < asset.Size)
                 {
                     byte[] buffer = new byte[1024];
-                    int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-                    fs.WriteAsync(buffer, 0, bytesRead);
+                    int bytesRead = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length));
+                    await fs.WriteAsync(buffer.AsMemory(0, bytesRead));
                     totalBytesRead += bytesRead;
                     Console.SetCursorPosition(1, 1);
                     Console.Write("Downloading " + asset.Name + " [");
@@ -92,28 +93,28 @@ class Program
         if (fileType == FileType.Zip)
         {
             Console.WriteLine("Extracting data...");
-            ZipFile.ExtractToDirectory(asset.Name, folderName);
+            ZipFile.ExtractToDirectory(assetName, folderName);
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Data extracted");
             Console.ForegroundColor = ConsoleColor.White;
-            File.Delete(asset.Name);
+            File.Delete(assetName);
         }
 
         if (ffmpeg)
         {
-            string path = Path.Combine(asset.Name.Replace(new FileInfo(asset.Name).Extension, ""), asset.Name.Replace(new FileInfo(asset.Name).Extension, ""), "bin");
+            string path = Path.Combine(assetName.Replace(new FileInfo(assetName).Extension, ""), assetName.Replace(new FileInfo(assetName).Extension, ""), "bin");
             foreach (string file in Directory.GetFiles(path))
             {
                 string destination = Path.Combine(Environment.CurrentDirectory + "\\" + new FileInfo(file).Name);
                 File.Move(file, destination, true);
             }
-            Directory.Delete(asset.Name.Replace(new FileInfo(asset.Name).Extension, ""), true);
+            Directory.Delete(assetName.Replace(new FileInfo(assetName).Extension, ""), true);
         }
 
         if (mainFile)
         {
             File.Move(Directory.GetFiles(Environment.CurrentDirectory + "\\Downloader")[0], Environment.CurrentDirectory + "\\" + "Downloader.exe", true);
-            Directory.Delete(asset.Name.Replace(new FileInfo(asset.Name).Extension, ""), true);
+            Directory.Delete(assetName.Replace(new FileInfo(assetName).Extension, ""), true);
         }
 
         if (run)
