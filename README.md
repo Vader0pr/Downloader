@@ -7,4 +7,4 @@ Download the installer from [latest release](github.com/Vader0pr/Downloader/rele
 2. Go to [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) and create a new app.
 3. Then go to the Spotify app's settings and copy client id and client secret to the Downloader's settings file.
 
-Now you can download tracks and albums from Spotify.
+Now you can download tracks, albums, and playlists from Spotify.
