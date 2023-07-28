@@ -28,8 +28,11 @@ namespace Downloader
         private async void AddToQueueButton_Click(object sender, EventArgs e) => await AddItemToQueue();
         private async Task AddItemToQueue()
         {
-            queue.Enqueue(AddItemTextbox.Text);
-            await UpdateListBox();
+            if (!string.IsNullOrWhiteSpace(AddItemTextbox.Text))
+            {
+                queue.Enqueue(AddItemTextbox.Text);
+                await UpdateListBox();
+            }
         }
         private Task UpdateListBox()
         {
@@ -103,6 +106,7 @@ namespace Downloader
                 }
                 else MessageBox.Show("Error getting playlist items", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            else _ = Task.Run(() => Download(args));
         }
         private async Task Download(string args)
         {

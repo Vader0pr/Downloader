@@ -1,4 +1,5 @@
 ﻿using GitHubAPIWrapper.Releases;
+using System;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Runtime.CompilerServices;
@@ -12,16 +13,20 @@ class Program
         StartInstaller();
         Thread.Sleep(-1);
     }
-    static async void StartInstaller()
+    static void StartInstaller()
     {
-        await Task.Run(() => Install(false, "yt-dlp", "yt-dlp", FileType.Exe, new string[] { "yt-dlp.exe" }, Array.Empty<string>()));
-        await Task.Run(() => Install(false, "BtbN", "FFmpeg-Builds", FileType.Zip, new string[] { "win64", "gpl", "zip" }, new string[] { "shared", "linux" }, true));
-        await Task.Run(() => Install(true, "Vader0pr", "Downloader", FileType.Zip, new string[] { "Downloader.zip" }, Array.Empty<string>(), false, true));
+        List<Task> tasks = new()
+        {
+            Task.Run(() => Install(false, "yt-dlp", "yt-dlp", FileType.Exe, 1, new string[] { "yt-dlp.exe" }, Array.Empty<string>())),
+            Task.Run(() => Install(false, "BtbN", "FFmpeg-Builds", FileType.Zip, 2, new string[] { "win64", "gpl", "zip" }, new string[] { "shared", "linux" }, true)),
+            Task.Run(() => Install(true, "Vader0pr", "Downloader", FileType.Zip, 3, new string[] { "Downloader.zip" }, Array.Empty<string>(), false, true))
+        };
+        tasks.ForEach(x => x.Wait());
         Console.Clear();
         Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine("Installer finished working");
     }
-    static async Task Install(bool run, string owner, string repo, FileType fileType, string[] filter, string[] negativeFilter, bool ffmpeg = false, bool mainFile = false, string executableName = "Downloader.exe")
+    static async Task Install(bool run, string owner, string repo, FileType fileType, int downloadId, string[] filter, string[] negativeFilter, bool ffmpeg = false, bool mainFile = false, string executableName = "Downloader.exe")
     {
         ReleasesApiClient apiClient = new();
         
@@ -38,15 +43,12 @@ class Program
         }
         ReleaseAsset asset = assets.First();
 
-        Console.WriteLine("Latest release: " + release.Name);
-
         string assetName = asset.Name ?? repo + "zip";
         string folderName = assetName.Replace(new FileInfo(assetName).Extension, "");
 
         if (File.Exists(asset.Name)) File.Delete(asset.Name);
         if (Directory.Exists(folderName)) Directory.Delete(folderName, true);
 
-        Console.WriteLine($"Downloading: {asset.Name}(from {asset.DownloadUrl})...");
 
         using (HttpClient client = new())
         {
@@ -55,48 +57,39 @@ class Program
                 Stream stream = await client.GetStreamAsync(asset.DownloadUrl);
 
                 donwloadtime = 1;
-                Console.WriteLine("Downloading...");
                 int totalBytesRead = 0;
                 System.Timers.Timer timer = new(1000);
                 timer.Elapsed += Timer_Elapsed;
                 timer.Start();
-                Console.Clear();
                 Console.CursorVisible = false;
+
                 while (fs.Length < asset.Size)
                 {
                     byte[] buffer = new byte[1024];
                     int bytesRead = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length));
                     await fs.WriteAsync(buffer.AsMemory(0, bytesRead));
                     totalBytesRead += bytesRead;
-                    Console.SetCursorPosition(1, 1);
-                    Console.Write("Downloading " + asset.Name + " [");
+
+                    string progress = "";
+                    progress += "Downloading " + asset.Name + " [";
                     for (int i = 0; i < (int)((double)totalBytesRead / (double)asset.Size * 100); i += 10)
                     {
-                        Console.Write("X");
+                        progress += "X";
                     }
                     for (int i = 100; i > (int)((double)totalBytesRead / (double)asset.Size * 100); i -= 10)
                     {
-                        Console.Write(" ");
+                        progress += " ";
                     }
-                    Console.Write("]");
-                    Console.Write($"{totalBytesRead / 1000000}/{asset.Size / 1000000}MB({(int)((double)totalBytesRead / (double)asset.Size * 100)}%) {Math.Round((float)totalBytesRead / 1000000 / donwloadtime, 1)}MB/s {donwloadtime}/{asset.Size / (totalBytesRead / donwloadtime)}s       ");
-                    Console.SetCursorPosition(1, 1);
+                    progress += "]";
+                    progress += $"{totalBytesRead / 1000000}/{asset.Size / 1000000}MB({(int)((double)totalBytesRead / (double)asset.Size * 100)}%) {Math.Round((float)totalBytesRead / 1000000 / donwloadtime, 1)}MB/s {donwloadtime}/{asset.Size / (totalBytesRead / donwloadtime)}s";
+                    DownloadProgress.ReportProgress(downloadId, progress);
                 }
-                Console.Clear();
                 timer.Stop();
-
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("Data downloaded");
-                Console.ForegroundColor = ConsoleColor.White;
             }
         }
         if (fileType == FileType.Zip)
         {
-            Console.WriteLine("Extracting data...");
             ZipFile.ExtractToDirectory(assetName, folderName);
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Data extracted");
-            Console.ForegroundColor = ConsoleColor.White;
             File.Delete(assetName);
         }
 
@@ -119,12 +112,11 @@ class Program
 
         if (run)
         {
-            Console.WriteLine("Executing program...");
             Process.Start(executableName);
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Program executed");
-            Console.ForegroundColor = ConsoleColor.White;
         }
+
+        DownloadProgress.ClearProgress(downloadId);
+        DownloadProgress.RefreshProgress();
     }
     private enum FileType
     {
@@ -134,5 +126,27 @@ class Program
     private static void Timer_Elapsed(object? sender, ElapsedEventArgs e)
     {
         donwloadtime++;
+        DownloadProgress.RefreshProgress();
+    }
+}
+public static class DownloadProgress
+{
+    public static Dictionary<int, string> Progresses { get; set; } = new();
+    public static void ReportProgress(int id, string progress)
+    {
+        if (!Progresses.ContainsKey(id))
+        {
+            Progresses.Add(id, progress);
+        }
+        else Progresses[id] = progress;
+    }
+    public static void ClearProgress(int id) => Progresses.Remove(id);
+    public static void RefreshProgress()
+    {
+        Console.Clear();
+        foreach (string progress in Progresses.Values)
+        {
+            Console.WriteLine(progress);
+        }
     }
 }
