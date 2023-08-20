@@ -1,4 +1,5 @@
 ﻿using GitHubAPIWrapper.Releases;
+using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.IO.Compression;
@@ -8,25 +9,42 @@ using System.Timers;
 class Program
 {
     public static int donwloadtime = 1;
+    private const string executableName = "Downloader.exe";
+    private static bool update = true;
     static void Main()
     {
         StartInstaller();
-        Thread.Sleep(-1);
+        if (update)
+        {
+            Thread.Sleep(-1);
+        }
     }
     static void StartInstaller()
     {
-        List<Task> tasks = new()
+        Versions versions = Versions.Load();
+        ReleasesApiClient apiClient = new();
+        List<Task> tasks = new();
+        string ytdlp = apiClient.GetLatestReleaseAsync("yt-dlp", "yt-dlp").Result.Name;
+        string ffmpeg = apiClient.GetLatestReleaseAsync("BtbN", "FFmpeg-Builds").Result.Name;
+        string downloader = apiClient.GetLatestReleaseAsync("Vader0pr", "Downloader").Result.Name;
+        if (ytdlp != versions.Ytdlp) tasks.Add(Task.Run(() => Install(false, "yt-dlp", "yt-dlp", FileType.Exe, 1, new string[] { "yt-dlp.exe" }, Array.Empty<string>())));
+        if (ffmpeg != versions.Ffmpeg) tasks.Add(Task.Run(() => Install(false, "BtbN", "FFmpeg-Builds", FileType.Zip, 2, new string[] { "win64", "gpl", "zip" }, new string[] { "shared", "linux" }, true)));
+        if (downloader != versions.Downloader) tasks.Add(Task.Run(() => Install(true, "Vader0pr", "Downloader", FileType.Zip, 3, new string[] { "Downloader.zip" }, Array.Empty<string>(), false, true)));
+        else
         {
-            Task.Run(() => Install(false, "yt-dlp", "yt-dlp", FileType.Exe, 1, new string[] { "yt-dlp.exe" }, Array.Empty<string>())),
-            Task.Run(() => Install(false, "BtbN", "FFmpeg-Builds", FileType.Zip, 2, new string[] { "win64", "gpl", "zip" }, new string[] { "shared", "linux" }, true)),
-            Task.Run(() => Install(true, "Vader0pr", "Downloader", FileType.Zip, 3, new string[] { "Downloader.zip" }, Array.Empty<string>(), false, true))
-        };
+            Process.Start(executableName);
+            update = false;
+        }
         tasks.ForEach(x => x.Wait());
+        versions.Ytdlp = ytdlp;
+        versions.Ffmpeg = ffmpeg;
+        versions.Downloader = downloader;
+        versions.Save();
         Console.Clear();
         Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine("Installer finished working");
     }
-    static async Task Install(bool run, string owner, string repo, FileType fileType, int downloadId, string[] filter, string[] negativeFilter, bool ffmpeg = false, bool mainFile = false, string executableName = "Downloader.exe")
+    static async Task Install(bool run, string owner, string repo, FileType fileType, int downloadId, string[] filter, string[] negativeFilter, bool ffmpeg = false, bool mainFile = false)
     {
         ReleasesApiClient apiClient = new();
         
@@ -149,4 +167,20 @@ public static class DownloadProgress
             Console.WriteLine(progress);
         }
     }
+}
+public class Versions
+{
+    private const string VersionsFile = "Versions.json";
+    [JsonProperty("downloader")]
+    public string Downloader { get; set; } = "";
+    [JsonProperty("ffmpeg")]
+    public string Ffmpeg { get; set; } = "";
+    [JsonProperty("yt-dlp")]
+    public string Ytdlp { get; set; } = "";
+    public static Versions Load()
+    {
+        try { return JsonConvert.DeserializeObject<Versions>(File.ReadAllText(VersionsFile)); }
+        catch (Exception) { return new Versions(); }
+    }
+    public void Save() => File.WriteAllText(VersionsFile, JsonConvert.SerializeObject(this));
 }
