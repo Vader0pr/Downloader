@@ -19,6 +19,7 @@ namespace Downloader
     public partial class MainForm : Form
     {
         Queue<string> queue = new();
+        bool queueBlocked = false;
         public MainForm()
         {
             InitializeComponent();
@@ -30,7 +31,9 @@ namespace Downloader
         {
             if (!string.IsNullOrWhiteSpace(AddItemTextbox.Text))
             {
-                queue.Enqueue(AddItemTextbox.Text);
+                string item = AddItemTextbox.Text;
+                if (OnlyAudioCheckbox.Checked) item += "--extract-audio";
+                queue.Enqueue(item);
                 await UpdateListBox();
             }
         }
@@ -40,20 +43,36 @@ namespace Downloader
             foreach (string item in queue) DownloadQueueListbox.Items.Add(item.Replace('+', ' ').Replace("--extract-audio", "(audio only)"));
             return Task.CompletedTask;
         }
+        private async Task KeepListBoxUpToDate()
+        {
+            while (queue.Count != 0 && DownloadQueueListbox.Items.Count != 0)
+            {
+                await Task.Delay(3000);
+                await Task.Run(UpdateListBox);
+            }
+        }
         private void DeleteSelectedButton_Click(object sender, EventArgs e)
         {
             List<string> tmpList = queue.ToList();
+            queue.Clear();
             foreach (string item in DownloadQueueListbox.SelectedItems) tmpList.Remove(item);
             queue = new(tmpList);
             Task.Run(UpdateListBox);
         }
-        private void StartDownloadButton_Click(object sender, EventArgs e)
+        private void StartDownloadButton_Click(object sender, EventArgs e) => Task.Run(RunDownloads);
+        private async Task RunDownloads()
         {
-            try { Task.Run(StartDownload); }
-            catch (Exception ex) { MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            for (int i = 0; i < Math.Clamp(queue.Count, 1, Environment.ProcessorCount); i++)
+            {
+                try { _ = Task.Run(StartDownload); }
+                catch (Exception ex) { MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            }
+            _ = Task.Run(KeepListBoxUpToDate);
         }
         private async Task StartDownload()
         {
+            while (queueBlocked) await Task.Delay(100);
+            queueBlocked = true;
             string args = queue.Peek();
             if (args.Length > 60) CurrentDownloadLabel.Text = args.Remove(60).Replace('+', ' ').Replace("--extract-audio", "(audio only)") + "...";
             else CurrentDownloadLabel.Text = args.Replace('+', ' ').Replace("--extract-audio", "(audio only)");
@@ -77,13 +96,14 @@ namespace Downloader
                 FullAlbum album = await spotify.SpotifyClient.Albums.Get(uri.Path.Split('/').Last());
                 if (album.Tracks.Items is not null)
                 {
+                    queue.Dequeue();
                     foreach (SimpleTrack track in album.Tracks.Items)
                     {
                         queue.Enqueue($"{album.Name} {track.Artists.First().Name} - {track.Name}".Trim() + "--extract-audio");
                     }
-                    queue.Dequeue();
+                    queueBlocked = false;
                     _ = Task.Run(UpdateListBox);
-                    _ = Task.Run(StartDownload);
+                    _ = Task.Run(RunDownloads);
                 }
                 else MessageBox.Show("Error getting album items", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -96,13 +116,14 @@ namespace Downloader
                 {
                     List<FullTrack> tracks = new();
                     playlist.Tracks.Items.ForEach(x => tracks.Add((FullTrack)x.Track));
+                    queue.Dequeue();
                     foreach (FullTrack track in tracks)
                     {
                         queue.Enqueue($"{track.Artists.First().Name} - {track.Name}".Trim() + "--extract-audio");
                     }
-                    queue.Dequeue();
+                    queueBlocked = false;
                     _ = Task.Run(UpdateListBox);
-                    _ = Task.Run(StartDownload);
+                    _ = Task.Run(RunDownloads);
                 }
                 else MessageBox.Show("Error getting playlist items", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -110,6 +131,8 @@ namespace Downloader
         }
         private async Task Download(string args)
         {
+            queue.Dequeue();
+            queueBlocked = false;
             if (!Directory.Exists(Path.Combine(Environment.CurrentDirectory, "Downloads"))) Directory.CreateDirectory(Path.Combine(Environment.CurrentDirectory, "Downloads"));
             Process downloadProcess = new()
             {
@@ -126,13 +149,12 @@ namespace Downloader
             };
             downloadProcess.Start();
             while (!downloadProcess.HasExited) CurrentDownloadInfoTextbox.Text = await downloadProcess.StandardOutput.ReadLineAsync();
-            queue.Dequeue();
-            _ = Task.Run(UpdateListBox);
             if (queue.Count > 0) _ = Task.Run(StartDownload);
         }
         private async void AddItemTextbox_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (e.KeyChar == ((char)Keys.Return)) await AddItemToQueue();
         }
+        private void RefreshListButton_Click(object sender, EventArgs e) => Task.Run(UpdateListBox);
     }
 }

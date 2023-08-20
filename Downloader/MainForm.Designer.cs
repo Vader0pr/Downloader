@@ -36,6 +36,8 @@ namespace Downloader
             DeleteSelectedButton = new Button();
             CurrentDownloadInfoTextbox = new TextBox();
             CurrentDownloadLabel = new Label();
+            RefreshListButton = new Button();
+            OnlyAudioCheckbox = new CheckBox();
             SuspendLayout();
             // 
             // AddItemTextbox
@@ -124,12 +126,39 @@ namespace Downloader
             CurrentDownloadLabel.TabIndex = 6;
             CurrentDownloadLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
+            // RefreshListButton
+            // 
+            RefreshListButton.BackColor = Color.FromArgb(0, 192, 0);
+            RefreshListButton.Cursor = Cursors.Hand;
+            RefreshListButton.FlatAppearance.BorderSize = 0;
+            RefreshListButton.FlatStyle = FlatStyle.Flat;
+            RefreshListButton.Location = new Point(693, 41);
+            RefreshListButton.Name = "RefreshListButton";
+            RefreshListButton.Size = new Size(95, 23);
+            RefreshListButton.TabIndex = 7;
+            RefreshListButton.Text = "Refresh list";
+            RefreshListButton.UseVisualStyleBackColor = false;
+            RefreshListButton.Click += RefreshListButton_Click;
+            // 
+            // OnlyAudioCheckbox
+            // 
+            OnlyAudioCheckbox.AutoSize = true;
+            OnlyAudioCheckbox.ForeColor = SystemColors.Control;
+            OnlyAudioCheckbox.Location = new Point(592, 70);
+            OnlyAudioCheckbox.Name = "OnlyAudioCheckbox";
+            OnlyAudioCheckbox.Size = new Size(139, 19);
+            OnlyAudioCheckbox.TabIndex = 8;
+            OnlyAudioCheckbox.Text = "Download only audio";
+            OnlyAudioCheckbox.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(15, 15, 15);
             ClientSize = new Size(800, 450);
+            Controls.Add(OnlyAudioCheckbox);
+            Controls.Add(RefreshListButton);
             Controls.Add(CurrentDownloadLabel);
             Controls.Add(CurrentDownloadInfoTextbox);
             Controls.Add(DeleteSelectedButton);
@@ -156,5 +185,7 @@ namespace Downloader
         private Button DeleteSelectedButton;
         private TextBox CurrentDownloadInfoTextbox;
         private Label CurrentDownloadLabel;
+        private Button RefreshListButton;
+        private CheckBox OnlyAudioCheckbox;
     }
 }
