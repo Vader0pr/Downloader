@@ -29,6 +29,7 @@ namespace Downloader
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             AddItemTextbox = new TextBox();
             AddToQueueButton = new Button();
             StartDownloadButton = new Button();
@@ -38,6 +39,8 @@ namespace Downloader
             CurrentDownloadLabel = new Label();
             RefreshListButton = new Button();
             OnlyAudioCheckbox = new CheckBox();
+            LoadListButton = new Button();
+            toolTip1 = new ToolTip(components);
             SuspendLayout();
             // 
             // AddItemTextbox
@@ -47,6 +50,7 @@ namespace Downloader
             AddItemTextbox.ForeColor = SystemColors.Window;
             AddItemTextbox.Location = new Point(12, 12);
             AddItemTextbox.Name = "AddItemTextbox";
+            AddItemTextbox.PlaceholderText = "Url or search query";
             AddItemTextbox.Size = new Size(574, 23);
             AddItemTextbox.TabIndex = 0;
             AddItemTextbox.KeyPress += AddItemTextbox_KeyPress;
@@ -62,6 +66,7 @@ namespace Downloader
             AddToQueueButton.Size = new Size(95, 23);
             AddToQueueButton.TabIndex = 1;
             AddToQueueButton.Text = "Add to queue";
+            toolTip1.SetToolTip(AddToQueueButton, "Adds new item to the queue");
             AddToQueueButton.UseVisualStyleBackColor = false;
             AddToQueueButton.Click += AddToQueueButton_Click;
             // 
@@ -76,6 +81,7 @@ namespace Downloader
             StartDownloadButton.Size = new Size(95, 23);
             StartDownloadButton.TabIndex = 2;
             StartDownloadButton.Text = "Start download";
+            toolTip1.SetToolTip(StartDownloadButton, "Starts the download");
             StartDownloadButton.UseVisualStyleBackColor = false;
             StartDownloadButton.Click += StartDownloadButton_Click;
             // 
@@ -98,11 +104,12 @@ namespace Downloader
             DeleteSelectedButton.Cursor = Cursors.Hand;
             DeleteSelectedButton.FlatAppearance.BorderSize = 0;
             DeleteSelectedButton.FlatStyle = FlatStyle.Flat;
-            DeleteSelectedButton.Location = new Point(592, 41);
+            DeleteSelectedButton.Location = new Point(592, 380);
             DeleteSelectedButton.Name = "DeleteSelectedButton";
             DeleteSelectedButton.Size = new Size(95, 23);
             DeleteSelectedButton.TabIndex = 4;
             DeleteSelectedButton.Text = "Delete selected";
+            toolTip1.SetToolTip(DeleteSelectedButton, "Deletes selected elements from the queue");
             DeleteSelectedButton.UseVisualStyleBackColor = false;
             DeleteSelectedButton.Click += DeleteSelectedButton_Click;
             // 
@@ -125,6 +132,7 @@ namespace Downloader
             CurrentDownloadLabel.Size = new Size(196, 34);
             CurrentDownloadLabel.TabIndex = 6;
             CurrentDownloadLabel.TextAlign = ContentAlignment.MiddleLeft;
+            toolTip1.SetToolTip(CurrentDownloadLabel, "Information abut current download");
             // 
             // RefreshListButton
             // 
@@ -137,6 +145,7 @@ namespace Downloader
             RefreshListButton.Size = new Size(95, 23);
             RefreshListButton.TabIndex = 7;
             RefreshListButton.Text = "Refresh list";
+            toolTip1.SetToolTip(RefreshListButton, "Refreshes the list");
             RefreshListButton.UseVisualStyleBackColor = false;
             RefreshListButton.Click += RefreshListButton_Click;
             // 
@@ -149,7 +158,23 @@ namespace Downloader
             OnlyAudioCheckbox.Size = new Size(139, 19);
             OnlyAudioCheckbox.TabIndex = 8;
             OnlyAudioCheckbox.Text = "Download only audio";
+            toolTip1.SetToolTip(OnlyAudioCheckbox, "When checked items that you add will be marked to download only audio");
             OnlyAudioCheckbox.UseVisualStyleBackColor = true;
+            // 
+            // LoadListButton
+            // 
+            LoadListButton.BackColor = Color.FromArgb(0, 192, 0);
+            LoadListButton.Cursor = Cursors.Hand;
+            LoadListButton.FlatAppearance.BorderSize = 0;
+            LoadListButton.FlatStyle = FlatStyle.Flat;
+            LoadListButton.Location = new Point(592, 41);
+            LoadListButton.Name = "LoadListButton";
+            LoadListButton.Size = new Size(95, 23);
+            LoadListButton.TabIndex = 9;
+            LoadListButton.Text = "Load list(s)";
+            toolTip1.SetToolTip(LoadListButton, "Loads a list or more of one url or search query per line");
+            LoadListButton.UseVisualStyleBackColor = false;
+            LoadListButton.Click += LoadListButton_Click;
             // 
             // MainForm
             // 
@@ -157,6 +182,7 @@ namespace Downloader
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(15, 15, 15);
             ClientSize = new Size(800, 450);
+            Controls.Add(LoadListButton);
             Controls.Add(OnlyAudioCheckbox);
             Controls.Add(RefreshListButton);
             Controls.Add(CurrentDownloadLabel);
@@ -171,7 +197,7 @@ namespace Downloader
             Name = "MainForm";
             ShowIcon = false;
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "MainForm";
+            Text = "Downloader";
             ResumeLayout(false);
             PerformLayout();
         }
@@ -187,5 +213,7 @@ namespace Downloader
         private Label CurrentDownloadLabel;
         private Button RefreshListButton;
         private CheckBox OnlyAudioCheckbox;
+        private Button LoadListButton;
+        private ToolTip toolTip1;
     }
 }

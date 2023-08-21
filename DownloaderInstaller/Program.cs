@@ -24,9 +24,20 @@ class Program
         Versions versions = Versions.Load();
         ReleasesApiClient apiClient = new();
         List<Task> tasks = new();
-        string ytdlp = apiClient.GetLatestReleaseAsync("yt-dlp", "yt-dlp").Result.Name;
-        string ffmpeg = apiClient.GetLatestReleaseAsync("BtbN", "FFmpeg-Builds").Result.Name;
-        string downloader = apiClient.GetLatestReleaseAsync("Vader0pr", "Downloader").Result.Name;
+        string ytdlp = "null";
+        string ffmpeg = "null";
+        string downloader = "null";
+        try
+        {
+#pragma warning disable CS8602
+#pragma warning disable CS8600
+            ytdlp = apiClient.GetLatestReleaseAsync("yt-dlp", "yt-dlp").Result.Name;
+            ffmpeg = apiClient.GetLatestReleaseAsync("BtbN", "FFmpeg-Builds").Result.Name;
+            downloader = apiClient.GetLatestReleaseAsync("Vader0pr", "Downloader").Result.Name;
+#pragma warning restore CS8602
+#pragma warning restore CS8600
+        }
+        catch (Exception ex) { Console.WriteLine("Error: " + ex.Message); }
         if (ytdlp != versions.Ytdlp) tasks.Add(Task.Run(() => Install(false, "yt-dlp", "yt-dlp", FileType.Exe, 1, new string[] { "yt-dlp.exe" }, Array.Empty<string>())));
         if (ffmpeg != versions.Ffmpeg) tasks.Add(Task.Run(() => Install(false, "BtbN", "FFmpeg-Builds", FileType.Zip, 2, new string[] { "win64", "gpl", "zip" }, new string[] { "shared", "linux" }, true)));
         if (downloader != versions.Downloader) tasks.Add(Task.Run(() => Install(true, "Vader0pr", "Downloader", FileType.Zip, 3, new string[] { "Downloader.zip" }, Array.Empty<string>(), false, true)));
@@ -36,9 +47,9 @@ class Program
             update = false;
         }
         tasks.ForEach(x => x.Wait());
-        versions.Ytdlp = ytdlp;
-        versions.Ffmpeg = ffmpeg;
-        versions.Downloader = downloader;
+        versions.Ytdlp = ytdlp ?? "null";
+        versions.Ffmpeg = ffmpeg ?? "null";
+        versions.Downloader = downloader ?? "null";
         versions.Save();
         Console.Clear();
         Console.ForegroundColor = ConsoleColor.Green;
@@ -128,10 +139,7 @@ class Program
             Directory.Delete(assetName.Replace(new FileInfo(assetName).Extension, ""), true);
         }
 
-        if (run)
-        {
-            Process.Start(executableName);
-        }
+        if (run) Process.Start(executableName);
 
         DownloadProgress.ClearProgress(downloadId);
         DownloadProgress.RefreshProgress();
@@ -179,7 +187,7 @@ public class Versions
     public string Ytdlp { get; set; } = "";
     public static Versions Load()
     {
-        try { return JsonConvert.DeserializeObject<Versions>(File.ReadAllText(VersionsFile)); }
+        try { return JsonConvert.DeserializeObject<Versions>(File.ReadAllText(VersionsFile)) ?? new Versions(); }
         catch (Exception) { return new Versions(); }
     }
     public void Save() => File.WriteAllText(VersionsFile, JsonConvert.SerializeObject(this));

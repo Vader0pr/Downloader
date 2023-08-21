@@ -32,7 +32,26 @@ namespace Downloader
             if (!string.IsNullOrWhiteSpace(AddItemTextbox.Text))
             {
                 string item = AddItemTextbox.Text;
-                if (OnlyAudioCheckbox.Checked) item += "--extract-audio";
+                if (OnlyAudioCheckbox.Checked)
+                {
+                    switch (QueueItemTypeManager.DetectQueueItemType(AddItemTextbox.Text))
+                    {
+                        case QueueItemTypeManager.QueueItemTypes.SearchQuery:
+                            item += " --extract-audio";
+                            break;
+                        case QueueItemTypeManager.QueueItemTypes.SpotifyTrack:
+                            break;
+                        case QueueItemTypeManager.QueueItemTypes.SpotifyAlbum:
+                            break;
+                        case QueueItemTypeManager.QueueItemTypes.SpotifyPlaylist:
+                            break;
+                        case QueueItemTypeManager.QueueItemTypes.DownloadLink:
+                            item += " --extract-audio";
+                            break;
+                        default:
+                            break;
+                    }
+                }
                 queue.Enqueue(item);
                 await UpdateListBox();
             }
@@ -55,11 +74,16 @@ namespace Downloader
         {
             List<string> tmpList = queue.ToList();
             queue.Clear();
-            foreach (string item in DownloadQueueListbox.SelectedItems) tmpList.Remove(item);
+            foreach (string item in DownloadQueueListbox.SelectedItems)
+            {
+                bool removed = tmpList.Remove(item.Replace("(audio only)", "--extract-audio"));
+                if (!removed) tmpList.Remove(item);
+            }
             queue = new(tmpList);
             Task.Run(UpdateListBox);
         }
         private void StartDownloadButton_Click(object sender, EventArgs e) => Task.Run(RunDownloads);
+#pragma warning disable CS1998
         private async Task RunDownloads()
         {
             for (int i = 0; i < Math.Clamp(queue.Count, 1, Environment.ProcessorCount); i++)
@@ -69,6 +93,7 @@ namespace Downloader
             }
             _ = Task.Run(KeepListBoxUpToDate);
         }
+#pragma warning restore CS1998
         private async Task StartDownload()
         {
             while (queueBlocked) await Task.Delay(100);
@@ -156,5 +181,77 @@ namespace Downloader
             if (e.KeyChar == ((char)Keys.Return)) await AddItemToQueue();
         }
         private void RefreshListButton_Click(object sender, EventArgs e) => Task.Run(UpdateListBox);
+
+        private void LoadListButton_Click(object sender, EventArgs e) => LoadLists();
+        int files = 0;
+        int maxFiles = 0;
+        private void LoadLists()
+        {
+            OpenFileDialog dialog = new()
+            {
+                Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*",
+                InitialDirectory = Environment.CurrentDirectory,
+                Multiselect = true,
+                Title = "Load list(s)",
+                RestoreDirectory = true
+            };
+            var result = dialog.ShowDialog();
+            maxFiles = dialog.FileNames.Length;
+            files = 0;
+            if (result == DialogResult.OK) foreach (string file in dialog.FileNames) _ = LoadList(file);
+            _ = Task.Run(LockListBox);
+            dialog.Dispose();
+        }
+        private async Task LockListBox()
+        {
+            DownloadQueueListbox.Enabled = false;
+            while (files < maxFiles)
+            {
+                CurrentDownloadInfoTextbox.Text = $"Lists loaded: {files}/{maxFiles}";
+                _ = Task.Run(UpdateListBox);
+                await Task.Delay(100);
+            }
+            await Task.Delay(100);
+            CurrentDownloadInfoTextbox.Text = $"Lists loaded: {files}/{maxFiles}";
+            _ = Task.Run(UpdateListBox);
+            DownloadQueueListbox.Enabled = true;
+        }
+        private async Task LoadList(string file)
+        {
+            try
+            {
+                using StreamReader sr = new(file, new FileStreamOptions()
+                {
+                    Access = FileAccess.Read,
+                    Mode = FileMode.Open
+                });
+                while (!sr.EndOfStream)
+                {
+                    string? line = await sr.ReadLineAsync();
+                    if (!string.IsNullOrWhiteSpace(line)) queue.Enqueue(line);
+                }
+                files++;
+            }
+            catch (Exception ex) { MessageBox.Show(ex.Message, "List loading error"); }
+        }
+    }
+    public class QueueItemTypeManager
+    {
+        public enum QueueItemTypes
+        {
+            SearchQuery,
+            SpotifyTrack,
+            SpotifyAlbum,
+            SpotifyPlaylist,
+            DownloadLink
+        }
+        public static QueueItemTypes DetectQueueItemType(string item)
+        {
+            if (!item.StartsWith("http")) return QueueItemTypes.SearchQuery;
+            else if (item.StartsWith("http") && item.Contains("open.spotify.com/track")) return QueueItemTypes.SpotifyTrack;
+            else if (item.StartsWith("http") && item.Contains("open.spotify.com/album")) return QueueItemTypes.SpotifyAlbum;
+            else if (item.StartsWith("http") && item.Contains("open.spotify.com/playlist")) return QueueItemTypes.SpotifyPlaylist;
+            else return QueueItemTypes.DownloadLink;
+        }
     }
 }
